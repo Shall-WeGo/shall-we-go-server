@@ -1,6 +1,6 @@
 package com.sam.shallwego.repository;
 
-import com.sam.shallwego.domain.location.repository.MemberRepository;
+import com.sam.shallwego.domain.member.repository.MemberRepository;
 import com.sam.shallwego.domain.member.entity.Member;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
