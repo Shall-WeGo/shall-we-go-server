@@ -8,6 +8,7 @@ import javax.persistence.*;
 @Getter
 @Entity
 @Builder
+@Table(name = "review")
 @AllArgsConstructor @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Review {
 

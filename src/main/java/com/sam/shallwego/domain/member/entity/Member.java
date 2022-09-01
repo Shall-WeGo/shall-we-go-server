@@ -10,6 +10,7 @@ import java.util.Collection;
 @Getter
 @Entity
 @Builder
+@Table(name = "member")
 @AllArgsConstructor @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Member implements UserDetails {
 

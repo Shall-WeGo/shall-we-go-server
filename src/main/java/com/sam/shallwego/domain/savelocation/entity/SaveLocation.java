@@ -9,6 +9,7 @@ import javax.persistence.*;
 @Getter
 @Entity
 @Builder
+@Table(name = "save_location")
 @AllArgsConstructor @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class SaveLocation {
 
