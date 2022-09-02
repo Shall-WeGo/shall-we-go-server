@@ -36,14 +36,14 @@ public class SecurityConfig {
                 .logout().disable();
         http
                 .authorizeExchange()
-                .pathMatchers(HttpMethod.GET, "/**")
+                .pathMatchers("/**")
                 .authenticated()
                 .and()
                 .addFilterAt(authenticationWebFilter, SecurityWebFiltersOrder.AUTHENTICATION)
                 .httpBasic().disable();
         http
                 .authorizeExchange()
-                .pathMatchers(HttpMethod.POST, "/**").permitAll();
+                .pathMatchers("/actuator/**").permitAll();
 
         return http.build();
     }
