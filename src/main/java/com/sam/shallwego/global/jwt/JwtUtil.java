@@ -10,8 +10,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
-import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 import java.util.Date;
 
@@ -71,19 +69,12 @@ public class JwtUtil {
                 .compact();
     }
 
-    public String getTokenFromHeader(String header) {
-        if (header != null && header.startsWith("Bearer ")) {
-            return header.replace("Bearer ", "");
-        }
-        return null;
-    }
-
     public Authentication getAuthenticationFromToken(String token) {
-        Mono<UserDetails> authenticationMono
+        UserDetails authentication
                 = memberService.findByUsername(extractIdFromToken(token, ACCESS))
-                .publishOn(Schedulers.immediate());
+                .block();
         return new UsernamePasswordAuthenticationToken(
-                authenticationMono, ""
+                authentication, ""
         );
     }
 
