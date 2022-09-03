@@ -60,4 +60,11 @@ public class Member implements UserDetails {
             super(HttpStatus.NOT_FOUND, "회원이 존재하지 않습니다.");
         }
     }
+
+    public static class InvalidPasswordException extends BusinessException {
+        public InvalidPasswordException() {
+            super(HttpStatus.UNAUTHORIZED, "비밀번호가 틀렸습니다.");
+        }
+    }
+
 }
