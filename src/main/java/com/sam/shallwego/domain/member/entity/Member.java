@@ -1,6 +1,8 @@
 package com.sam.shallwego.domain.member.entity;
 
+import com.sam.shallwego.global.exception.BusinessException;
 import lombok.*;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -52,4 +54,17 @@ public class Member implements UserDetails {
     public boolean isEnabled() {
         return true;
     }
+
+    public static class NotExistsException extends BusinessException {
+        public NotExistsException() {
+            super(HttpStatus.NOT_FOUND, "회원이 존재하지 않습니다.");
+        }
+    }
+
+    public static class InvalidPasswordException extends BusinessException {
+        public InvalidPasswordException() {
+            super(HttpStatus.UNAUTHORIZED, "비밀번호가 틀렸습니다.");
+        }
+    }
+
 }
