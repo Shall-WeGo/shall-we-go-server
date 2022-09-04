@@ -5,6 +5,7 @@ import com.sam.shallwego.domain.member.entity.Member;
 import com.sam.shallwego.domain.member.repository.MemberRepository;
 import com.sam.shallwego.domain.member.ro.LoginRO;
 import com.sam.shallwego.domain.member.ro.SignRO;
+import com.sam.shallwego.domain.member.service.AuthService;
 import com.sam.shallwego.domain.member.service.MemberService;
 import com.sam.shallwego.global.jwt.JwtUtil;
 import com.sam.shallwego.global.jwt.config.JwtSecretConfig;
@@ -15,6 +16,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import reactor.core.publisher.Mono;
@@ -38,10 +40,13 @@ public class MemberServiceTest {
     @Spy
     private PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
+    @SpyBean
+    private AuthService authService;
+
     @Spy
     private JwtUtil jwtUtil = new JwtUtil(
             new JwtSecretConfig("accessSecret", "refreshSecret"),
-            memberService
+            authService
     );
 
     @Test

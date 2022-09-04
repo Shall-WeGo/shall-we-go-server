@@ -1,6 +1,6 @@
 package com.sam.shallwego.global.jwt;
 
-import com.sam.shallwego.domain.member.service.MemberService;
+import com.sam.shallwego.domain.member.service.AuthService;
 import com.sam.shallwego.global.exception.BusinessException;
 import com.sam.shallwego.global.jwt.config.JwtSecretConfig;
 import io.jsonwebtoken.*;
@@ -22,7 +22,7 @@ public class JwtUtil {
     private static final long ACCESS_TIME = 1000 * 60 * 60;
 
     private final JwtSecretConfig jwtSecretConfig;
-    private final MemberService memberService;
+    private final AuthService authService;
 
     public String generateAccessToken(String memberId) {
         return generateToken(ACCESS, memberId, ACCESS_TIME);
@@ -71,7 +71,7 @@ public class JwtUtil {
 
     public Authentication getAuthenticationFromToken(String token) {
         UserDetails authentication
-                = memberService.findByUsername(extractIdFromToken(token, ACCESS))
+                = authService.findByUsername(extractIdFromToken(token, ACCESS))
                 .block();
         return new UsernamePasswordAuthenticationToken(
                 authentication, ""
