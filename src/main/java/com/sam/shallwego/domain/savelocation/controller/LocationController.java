@@ -1,5 +1,6 @@
 package com.sam.shallwego.domain.savelocation.controller;
 
+import com.sam.shallwego.domain.location.entity.Location;
 import com.sam.shallwego.domain.savelocation.dto.LocationDto;
 import com.sam.shallwego.domain.savelocation.service.LocationService;
 import lombok.RequiredArgsConstructor;
@@ -28,12 +29,11 @@ public class LocationController {
     }
 
     @DeleteMapping
-    public Mono<Void> deleteLocation(Mono<Authentication> authenticationMono,
-                                     @RequestParam String address) {
+    public Mono<Object> deleteLocation(Mono<Authentication> authenticationMono,
+                                         @RequestParam String address) {
         return authenticationMono
                 .map(authentication -> authentication.getCredentials().toString())
                 .publishOn(Schedulers.boundedElastic())
-                .doOnNext(token -> locationService.deleteLocation(token, address).subscribe())
-                .then();
+                .flatMap(token -> locationService.deleteLocation(token, address));
     }
 }

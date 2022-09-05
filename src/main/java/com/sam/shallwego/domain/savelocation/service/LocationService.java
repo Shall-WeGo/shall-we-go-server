@@ -6,14 +6,13 @@ import com.sam.shallwego.domain.member.service.MemberService;
 import com.sam.shallwego.domain.savelocation.dto.LocationDto;
 import com.sam.shallwego.domain.savelocation.entity.SaveLocation;
 import com.sam.shallwego.domain.savelocation.repository.SaveLocationRepository;
+import com.sam.shallwego.global.exception.BusinessException;
 import com.sam.shallwego.global.jwt.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
-
-import java.util.function.Supplier;
 
 @Service
 @Transactional
@@ -28,7 +27,7 @@ public class LocationService {
     public Mono<Void> saveLocation(final String token,
                                    final LocationDto locationDto) {
         String username = jwtUtil.extractUsernameFromToken(token, "access");
-        return findLocationMonoByAddress(() -> findLocationOrElseByAddress(locationDto.getLocation()))
+        return findLocationOrElseByAddress(locationDto.getLocation())
                 .flatMap(location -> {
                     if (location.getId() == null) {
                         return Mono.fromCallable(() -> locationRepository.save(location))
@@ -47,36 +46,33 @@ public class LocationService {
                 .then();
     }
 
-    public Mono<Void> deleteLocation(final String token,
+    public Mono<Object> deleteLocation(final String token,
                                      final String address) {
         String username = jwtUtil.extractUsernameFromToken(token, "access");
-        return findLocationMonoByAddress(() -> findLocationByAddress(address))
-                .doOnNext(location -> memberService.memberMonoByUsername(username)
-                        .doOnNext(member -> Mono.fromCallable(() -> saveLocationRepository.findByMemberAndLocation(member, location)
-                                .orElseThrow(SaveLocation.NotSavedException::new))
+        return findLocationByAddress(address)
+                .flatMap(location -> memberService.memberMonoByUsername(username)
+                        .flatMap(member -> Mono.fromCallable(() -> saveLocationRepository.findByMemberAndLocation(member, location)
+                                        .orElseThrow(SaveLocation.NotSavedException::new))
+                                .onErrorResume(BusinessException.class, e -> {e.printStackTrace(); return Mono.error(e);})
+                                .subscribeOn(Schedulers.boundedElastic()))
+                        .doOnSuccess(saveLocation -> Mono.fromRunnable(() -> saveLocationRepository.delete(saveLocation))
                                 .subscribeOn(Schedulers.boundedElastic())
-                                .doOnNext(saveLocation -> Mono.fromRunnable(() -> saveLocationRepository.delete(saveLocation))
-                                        .subscribeOn(Schedulers.boundedElastic())
-                                        .subscribe()).subscribe()).publishOn(Schedulers.boundedElastic())
-                        .subscribe()).subscribeOn(Schedulers.boundedElastic())
-                .then();
+                                .subscribe())).publishOn(Schedulers.boundedElastic())
+                .onErrorResume(Mono::error).publishOn(Schedulers.boundedElastic())
+                .flatMap(saveLocation -> Mono.empty());
     }
 
     @Transactional(readOnly = true)
-    protected Mono<Location> findLocationMonoByAddress(Supplier<Location> supplier) {
-        return Mono.fromCallable(supplier::get)
+    public Mono<Location> findLocationOrElseByAddress(String address) {
+        return Mono.fromCallable(() -> locationRepository.findByAddress(address)
+                .orElse(new Location(null, address)))
                 .subscribeOn(Schedulers.boundedElastic());
     }
 
     @Transactional(readOnly = true)
-    protected Location findLocationOrElseByAddress(String address) {
-        return locationRepository.findByAddress(address)
-                .orElse(new Location(null, address));
-    }
-
-    @Transactional(readOnly = true)
-    protected Location findLocationByAddress(String address) {
-        return locationRepository.findByAddress(address)
-                .orElseThrow(Location.NotExistsException::new);
+    public Mono<Location> findLocationByAddress(String address) {
+        return Mono.fromCallable(() -> locationRepository.findByAddress(address)
+                .orElseThrow(Location.NotExistsException::new))
+                .subscribeOn(Schedulers.boundedElastic());
     }
 }
