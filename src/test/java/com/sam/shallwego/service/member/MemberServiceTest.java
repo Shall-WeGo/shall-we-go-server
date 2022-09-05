@@ -1,6 +1,5 @@
 package com.sam.shallwego.service.member;
 
-import com.sam.shallwego.domain.member.dto.ReissueDto;
 import com.sam.shallwego.domain.member.dto.SignDto;
 import com.sam.shallwego.domain.member.entity.Member;
 import com.sam.shallwego.domain.member.repository.MemberRepository;

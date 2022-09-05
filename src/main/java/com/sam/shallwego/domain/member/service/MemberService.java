@@ -26,15 +26,15 @@ public class MemberService {
 
     @Transactional
     public Mono<SignRO> registerMember(final SignDto signDto) {
-        return Mono.fromCallable(() -> memberRepository.save(signDto.toEntity(passwordEncoder)))
+        return Mono.fromCallable(() -> memberRepository
+                        .save(signDto.toEntity(passwordEncoder)))
                 .map(SignRO::new)
                 .subscribeOn(Schedulers.boundedElastic())
                 .log();
     }
 
     public Mono<LoginRO> loginMember(final SignDto signDto) {
-        return Mono.fromCallable(() -> memberRepository.findByUsername(signDto.getUsername())
-                .orElseThrow(Member.NotExistsException::new)).flatMap(member -> {
+        return memberMonoByUsername(signDto.getUsername()).flatMap(member -> {
             if (!passwordEncoder.matches(signDto.getPassword(), member.getPassword())) {
                 return Mono.error(Member.InvalidPasswordException::new);
             }
@@ -49,10 +49,16 @@ public class MemberService {
 
     public Mono<ReissueRO> reissueToken(final ReissueDto reissueDto) {
         String username = jwtUtil.extractUsernameFromToken(reissueDto.getRefreshToken(), "refresh");
+        return memberMonoByUsername(username)
+                .subscribeOn(Schedulers.boundedElastic())
+                .flatMap(member -> Mono
+                        .just(new ReissueRO(jwtUtil.generateAccessToken(member.getUsername())))
+                ).log();
+    }
+
+    public Mono<Member> memberMonoByUsername(String username) {
         return Mono.fromCallable(() -> memberRepository.findByUsername(username)
                 .orElseThrow(Member.NotExistsException::new))
-                .subscribeOn(Schedulers.boundedElastic())
-                .flatMap(member -> Mono.just(new ReissueRO(jwtUtil.generateAccessToken(member.getUsername())))
-                ).log();
+                .subscribeOn(Schedulers.boundedElastic());
     }
 }
