@@ -4,10 +4,7 @@ import com.sam.shallwego.domain.savelocation.dto.LocationDto;
 import com.sam.shallwego.domain.savelocation.service.LocationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
@@ -27,6 +24,16 @@ public class LocationController {
                 .map(authentication -> authentication.getCredentials().toString())
                 .publishOn(Schedulers.boundedElastic())
                 .doOnNext(token -> locationService.saveLocation(token, locationDto).subscribe())
+                .then();
+    }
+
+    @DeleteMapping
+    public Mono<Void> deleteLocation(Mono<Authentication> authenticationMono,
+                                     @RequestParam String address) {
+        return authenticationMono
+                .map(authentication -> authentication.getCredentials().toString())
+                .publishOn(Schedulers.boundedElastic())
+                .doOnNext(token -> locationService.deleteLocation(token, address).subscribe())
                 .then();
     }
 }

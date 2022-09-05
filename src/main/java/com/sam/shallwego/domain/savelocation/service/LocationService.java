@@ -1,6 +1,5 @@
 package com.sam.shallwego.domain.savelocation.service;
 
-import com.sam.shallwego.domain.embedded.MemberId;
 import com.sam.shallwego.domain.location.entity.Location;
 import com.sam.shallwego.domain.location.repository.LocationRepository;
 import com.sam.shallwego.domain.member.service.MemberService;
@@ -13,6 +12,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
+
+import java.util.function.Supplier;
 
 @Service
 @Transactional
@@ -27,7 +28,7 @@ public class LocationService {
     public Mono<Void> saveLocation(final String token,
                                    final LocationDto locationDto) {
         String username = jwtUtil.extractUsernameFromToken(token, "access");
-        return findLocationByAddress(locationDto.getLocation())
+        return findLocationMonoByAddress(() -> findLocationOrElseByAddress(locationDto.getLocation()))
                 .flatMap(location -> {
                     if (location.getId() == null) {
                         return Mono.fromCallable(() -> locationRepository.save(location))
@@ -37,8 +38,7 @@ public class LocationService {
                     return Mono.just(location);
                 }).doOnNext(location -> memberService.memberMonoByUsername(username)
                         .doOnNext(member -> {
-                            MemberId memberId = new MemberId(member);
-                            SaveLocation saveLocation = new SaveLocation(memberId, location);
+                            SaveLocation saveLocation = new SaveLocation(null, member, location);
                             Mono.fromCallable(() -> saveLocationRepository.save(saveLocation))
                                     .subscribeOn(Schedulers.boundedElastic())
                                     .subscribe();
@@ -47,10 +47,36 @@ public class LocationService {
                 .then();
     }
 
+    public Mono<Void> deleteLocation(final String token,
+                                     final String address) {
+        String username = jwtUtil.extractUsernameFromToken(token, "access");
+        return findLocationMonoByAddress(() -> findLocationByAddress(address))
+                .doOnNext(location -> memberService.memberMonoByUsername(username)
+                        .doOnNext(member -> Mono.fromCallable(() -> saveLocationRepository.findByMemberAndLocation(member, location)
+                                .orElseThrow(SaveLocation.NotSavedException::new))
+                                .subscribeOn(Schedulers.boundedElastic())
+                                .doOnNext(saveLocation -> Mono.fromRunnable(() -> saveLocationRepository.delete(saveLocation))
+                                        .subscribeOn(Schedulers.boundedElastic())
+                                        .subscribe()).subscribe()).publishOn(Schedulers.boundedElastic())
+                        .subscribe()).subscribeOn(Schedulers.boundedElastic())
+                .then();
+    }
+
     @Transactional(readOnly = true)
-    protected Mono<Location> findLocationByAddress(String address) {
-        return Mono.fromCallable(() -> locationRepository.findByAddress(address)
-                .orElse(new Location(null, address)))
+    protected Mono<Location> findLocationMonoByAddress(Supplier<Location> supplier) {
+        return Mono.fromCallable(supplier::get)
                 .subscribeOn(Schedulers.boundedElastic());
+    }
+
+    @Transactional(readOnly = true)
+    protected Location findLocationOrElseByAddress(String address) {
+        return locationRepository.findByAddress(address)
+                .orElse(new Location(null, address));
+    }
+
+    @Transactional(readOnly = true)
+    protected Location findLocationByAddress(String address) {
+        return locationRepository.findByAddress(address)
+                .orElseThrow(Location.NotExistsException::new);
     }
 }

@@ -1,8 +1,10 @@
 package com.sam.shallwego.domain.savelocation.entity;
 
 import com.sam.shallwego.domain.location.entity.Location;
-import com.sam.shallwego.domain.embedded.MemberId;
+import com.sam.shallwego.domain.member.entity.Member;
+import com.sam.shallwego.global.exception.BusinessException;
 import lombok.*;
+import org.springframework.http.HttpStatus;
 
 import javax.persistence.*;
 
@@ -13,10 +15,19 @@ import javax.persistence.*;
 @AllArgsConstructor @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class SaveLocation {
 
-    @EmbeddedId
-    private MemberId memberId;
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne
+    private Member member;
 
     @ManyToOne
     private Location location;
+
+    public static class NotSavedException extends BusinessException {
+        public NotSavedException() {
+            super(HttpStatus.CONFLICT, "저장되지 않은 장소입니다.");
+        }
+    }
 
 }

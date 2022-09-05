@@ -1,6 +1,5 @@
 package com.sam.shallwego.service.location;
 
-import com.sam.shallwego.domain.embedded.MemberId;
 import com.sam.shallwego.domain.location.entity.Location;
 import com.sam.shallwego.domain.location.repository.LocationRepository;
 import com.sam.shallwego.domain.member.entity.Member;
@@ -61,12 +60,12 @@ public class LocationServiceTest {
 
     @Test
     @DisplayName("장소 저장 성공 테스트")        // 성공만 가능한 Service
-    void saveLocationFailed() {
+    void saveLocationSuccess() {
         // given
         Member member = member();
         LocationDto locationDto = new LocationDto("location");
         Location location = location(locationDto.getLocation());
-        SaveLocation saveLocation = new SaveLocation(new MemberId(member), location);
+        SaveLocation saveLocation = new SaveLocation(0L, member, location);
         when(locationRepository.findByAddress(anyString()))
                 .thenReturn(Optional.empty());
         when(locationRepository.save(any()))
