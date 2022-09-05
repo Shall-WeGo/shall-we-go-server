@@ -1,7 +1,9 @@
 package com.sam.shallwego.domain.member.controller;
 
+import com.sam.shallwego.domain.member.dto.ReissueDto;
 import com.sam.shallwego.domain.member.dto.SignDto;
 import com.sam.shallwego.domain.member.ro.LoginRO;
+import com.sam.shallwego.domain.member.ro.ReissueRO;
 import com.sam.shallwego.domain.member.ro.SignRO;
 import com.sam.shallwego.domain.member.service.MemberService;
 import lombok.RequiredArgsConstructor;
@@ -27,9 +29,8 @@ public class MemberController {
         return memberService.loginMember(signDto);
     }
 
-    @GetMapping
-    public Mono<SignRO> findInfoById(@RequestParam("member-id") long memberId) {
-        return memberService.getMemberInfo(memberId);
+    @PostMapping("/reissue")
+    public Mono<ReissueRO> reissueToken(@RequestBody @Valid ReissueDto reissueDto) {
+        return memberService.reissueToken(reissueDto);
     }
-
 }
