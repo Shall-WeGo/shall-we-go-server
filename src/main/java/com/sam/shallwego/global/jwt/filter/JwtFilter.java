@@ -25,6 +25,7 @@ public class JwtFilter implements WebFilter {
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
         String token = resolveToken(exchange.getRequest());
+        System.out.println(token);
         if (StringUtils.hasText(token)) {
             Authentication authentication = jwtUtil.getAuthenticationFromToken(token);
             return chain.filter(exchange)

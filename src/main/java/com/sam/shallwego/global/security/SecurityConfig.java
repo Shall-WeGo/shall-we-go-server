@@ -1,5 +1,7 @@
 package com.sam.shallwego.global.security;
 
+import com.sam.shallwego.domain.member.entity.Member;
+import com.sam.shallwego.domain.member.repository.MemberRepository;
 import com.sam.shallwego.global.jwt.JwtUtil;
 import com.sam.shallwego.global.jwt.filter.JwtFilter;
 import lombok.RequiredArgsConstructor;
@@ -14,19 +16,23 @@ import org.springframework.security.access.expression.method.DefaultMethodSecuri
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.authentication.UserDetailsRepositoryReactiveAuthenticationManager;
 import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
+import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.security.web.server.context.NoOpServerSecurityContextRepository;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.io.Serializable;
 
 @Configuration
+@EnableWebFluxSecurity
 @RequiredArgsConstructor
 @EnableReactiveMethodSecurity
 public class SecurityConfig {
@@ -59,12 +65,14 @@ public class SecurityConfig {
                     });
                 }).csrf().disable()
                 .formLogin().disable()
+                .cors().disable()
                 .httpBasic().disable()
                 .authenticationManager(manager)
                 .securityContextRepository(NoOpServerSecurityContextRepository.getInstance())
                 .authorizeExchange(exchange -> {
                     exchange.pathMatchers(HttpMethod.OPTIONS).permitAll()
                             .pathMatchers("/actuator/**").permitAll()
+                            .pathMatchers(HttpMethod.POST,"/users/**").permitAll()
                             .anyExchange().authenticated();
                 }).addFilterAt(new JwtFilter(jwtUtil), SecurityWebFiltersOrder.HTTP_BASIC)
                 .build();
@@ -76,8 +84,9 @@ public class SecurityConfig {
             @Override
             public boolean hasPermission(Authentication authentication,
                                          Object targetDomainObject, Object permission) {
-                return authentication.getAuthorities().stream()
-                        .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals(targetDomainObject));
+                return (authentication.getAuthorities().stream()
+                        .anyMatch(grantedAuthority -> grantedAuthority.getAuthority()
+                                .equals(targetDomainObject)));
             }
 
             @Override
@@ -86,6 +95,15 @@ public class SecurityConfig {
                 return false;
             }
         };
+    }
+
+    @Bean
+    public ReactiveUserDetailsService userDetailsService(MemberRepository memberRepository) {
+        return username -> Mono.fromCallable(() -> memberRepository.findByUsername(username)
+                .orElseThrow(Member.NotExistsException::new))
+                .cast(UserDetails.class)
+                .subscribeOn(Schedulers.boundedElastic())
+                .log();
     }
 
     @Bean

@@ -5,7 +5,6 @@ import com.sam.shallwego.domain.member.entity.Member;
 import com.sam.shallwego.domain.member.repository.MemberRepository;
 import com.sam.shallwego.domain.member.ro.LoginRO;
 import com.sam.shallwego.domain.member.ro.SignRO;
-import com.sam.shallwego.domain.member.service.AuthService;
 import com.sam.shallwego.domain.member.service.MemberService;
 import com.sam.shallwego.global.jwt.JwtUtil;
 import com.sam.shallwego.global.jwt.config.JwtSecretConfig;
@@ -40,14 +39,10 @@ public class MemberServiceTest {
     @Spy
     private PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
-    @SpyBean
-    private AuthService authService;
+    private final JwtSecretConfig jwtSecretConfig = new JwtSecretConfig();
 
-    @Spy
-    private JwtUtil jwtUtil = new JwtUtil(
-            new JwtSecretConfig("accessSecret", "refreshSecret"),
-            authService
-    );
+    @SpyBean
+    private JwtUtil jwtUtil;
 
     @Test
     @DisplayName("회원 가입 실패 테스트")

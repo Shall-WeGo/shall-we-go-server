@@ -5,10 +5,7 @@ import com.sam.shallwego.domain.member.ro.LoginRO;
 import com.sam.shallwego.domain.member.ro.SignRO;
 import com.sam.shallwego.domain.member.service.MemberService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
 import javax.validation.Valid;
@@ -29,4 +26,10 @@ public class MemberController {
     public Mono<LoginRO> login(@RequestBody @Valid SignDto signDto) {
         return memberService.loginMember(signDto);
     }
+
+    @GetMapping
+    public Mono<SignRO> findInfoById(@RequestParam("member-id") long memberId) {
+        return memberService.getMemberInfo(memberId);
+    }
+
 }

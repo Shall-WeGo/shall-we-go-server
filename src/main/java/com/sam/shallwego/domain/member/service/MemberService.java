@@ -37,10 +37,18 @@ public class MemberService {
             }
 
             return Mono.just(new LoginRO(
-                    jwtUtil.generateAccessToken(String.valueOf(member.getId())),
-                    jwtUtil.generateRefreshToken(String.valueOf(member.getId()))
+                    jwtUtil.generateAccessToken(member.getUsername()),
+                    jwtUtil.generateRefreshToken(member.getUsername())
             ));
         }).subscribeOn(Schedulers.boundedElastic())
         .log();
+    }
+
+    public Mono<SignRO> getMemberInfo(long memberId) {
+        return Mono.fromCallable(() -> memberRepository.findById(memberId)
+                .orElseThrow(Member.NotExistsException::new))
+                .map(SignRO::new)
+                .subscribeOn(Schedulers.boundedElastic())
+                .log();
     }
 }
