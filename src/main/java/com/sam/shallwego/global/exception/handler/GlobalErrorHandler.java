@@ -14,6 +14,7 @@ import org.springframework.http.codec.support.DefaultServerCodecConfigurer;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.server.*;
+import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Mono;
 
 import java.util.Map;
@@ -44,6 +45,10 @@ public class GlobalErrorHandler extends AbstractErrorWebExceptionHandler {
         Throwable throwable = getError(request);
         if (throwable instanceof BusinessException) {
             BusinessException exception = (BusinessException) throwable;
+            httpStatus = exception.getStatus();
+        }
+        else if (throwable instanceof ResponseStatusException) {
+            ResponseStatusException exception = (ResponseStatusException) throwable;
             httpStatus = exception.getStatus();
         }
 
