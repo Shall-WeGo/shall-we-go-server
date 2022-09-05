@@ -1,9 +1,11 @@
 package com.sam.shallwego.domain.member.service;
 
+import com.sam.shallwego.domain.member.dto.ReissueDto;
 import com.sam.shallwego.domain.member.dto.SignDto;
 import com.sam.shallwego.domain.member.entity.Member;
 import com.sam.shallwego.domain.member.repository.MemberRepository;
 import com.sam.shallwego.domain.member.ro.LoginRO;
+import com.sam.shallwego.domain.member.ro.ReissueRO;
 import com.sam.shallwego.domain.member.ro.SignRO;
 import com.sam.shallwego.global.jwt.JwtUtil;
 import lombok.RequiredArgsConstructor;
@@ -14,7 +16,7 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 @Service
-@Transactional
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class MemberService {
 
@@ -22,6 +24,7 @@ public class MemberService {
     private final MemberRepository memberRepository;
     private final JwtUtil jwtUtil;
 
+    @Transactional
     public Mono<SignRO> registerMember(final SignDto signDto) {
         return Mono.fromCallable(() -> memberRepository.save(signDto.toEntity(passwordEncoder)))
                 .map(SignRO::new)
@@ -44,11 +47,12 @@ public class MemberService {
         .log();
     }
 
-    public Mono<SignRO> getMemberInfo(long memberId) {
-        return Mono.fromCallable(() -> memberRepository.findById(memberId)
+    public Mono<ReissueRO> reissueToken(final ReissueDto reissueDto) {
+        String username = jwtUtil.extractUsernameFromToken(reissueDto.getRefreshToken(), "refresh");
+        return Mono.fromCallable(() -> memberRepository.findByUsername(username)
                 .orElseThrow(Member.NotExistsException::new))
-                .map(SignRO::new)
                 .subscribeOn(Schedulers.boundedElastic())
-                .log();
+                .flatMap(member -> Mono.just(new ReissueRO(jwtUtil.generateAccessToken(member.getUsername())))
+                ).log();
     }
 }

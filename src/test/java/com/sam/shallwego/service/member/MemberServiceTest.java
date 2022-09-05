@@ -1,5 +1,6 @@
 package com.sam.shallwego.service.member;
 
+import com.sam.shallwego.domain.member.dto.ReissueDto;
 import com.sam.shallwego.domain.member.dto.SignDto;
 import com.sam.shallwego.domain.member.entity.Member;
 import com.sam.shallwego.domain.member.repository.MemberRepository;
@@ -15,7 +16,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import reactor.core.publisher.Mono;
@@ -41,8 +41,10 @@ public class MemberServiceTest {
 
     private final JwtSecretConfig jwtSecretConfig = new JwtSecretConfig();
 
-    @SpyBean
-    private JwtUtil jwtUtil;
+    @Spy
+    private JwtUtil jwtUtil = new JwtUtil(
+            jwtSecretConfig.setInit("accessSecret", "refreshSecret")
+    );
 
     @Test
     @DisplayName("회원 가입 실패 테스트")
@@ -110,8 +112,8 @@ public class MemberServiceTest {
                 passwordEncoder.encode(signDto.getPassword())
         );
         LoginRO loginRO = new LoginRO(
-                jwtUtil.generateAccessToken(String.valueOf(member.getId())),
-                jwtUtil.generateRefreshToken(String.valueOf(member.getId()))
+                jwtUtil.generateAccessToken(member.getUsername()),
+                jwtUtil.generateRefreshToken(member.getPassword())
         );
         when(memberRepository.findByUsername(any()))
                 .thenReturn(Optional.of(member));
