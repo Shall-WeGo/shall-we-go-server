@@ -1,6 +1,5 @@
 package com.sam.shallwego.domain.savelocation.controller;
 
-import com.sam.shallwego.domain.location.entity.Location;
 import com.sam.shallwego.domain.savelocation.dto.LocationDto;
 import com.sam.shallwego.domain.savelocation.ro.SaveLocationRO;
 import com.sam.shallwego.domain.savelocation.service.LocationService;
