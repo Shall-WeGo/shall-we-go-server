@@ -6,13 +6,17 @@ import com.sam.shallwego.domain.member.service.MemberService;
 import com.sam.shallwego.domain.savelocation.dto.LocationDto;
 import com.sam.shallwego.domain.savelocation.entity.SaveLocation;
 import com.sam.shallwego.domain.savelocation.repository.SaveLocationRepository;
+import com.sam.shallwego.domain.savelocation.ro.SaveLocationRO;
 import com.sam.shallwego.global.exception.BusinessException;
 import com.sam.shallwego.global.jwt.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
+
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -60,6 +64,21 @@ public class LocationService {
                                 .subscribe())).publishOn(Schedulers.boundedElastic())
                 .onErrorResume(Mono::error).publishOn(Schedulers.boundedElastic())
                 .flatMap(saveLocation -> Mono.empty());
+    }
+
+    @Transactional(readOnly = true)
+    public Flux<SaveLocationRO> findLocationsByMember(final String token) {
+        String username = jwtUtil.extractUsernameFromToken(token, "access");
+        return memberService.memberMonoByUsername(username)
+                .flatMap(member -> Mono.fromCallable(() -> saveLocationRepository
+                        .findAllByMember(member)
+                        .parallelStream()
+                        .map(SaveLocationRO::new)
+                        .collect(Collectors.toList()))
+                        .subscribeOn(Schedulers.boundedElastic()))
+                .subscribeOn(Schedulers.boundedElastic())
+                .flatMapMany(Flux::fromIterable)
+                .subscribeOn(Schedulers.boundedElastic());
     }
 
     @Transactional(readOnly = true)

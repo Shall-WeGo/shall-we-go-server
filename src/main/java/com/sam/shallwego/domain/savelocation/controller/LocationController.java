@@ -2,10 +2,12 @@ package com.sam.shallwego.domain.savelocation.controller;
 
 import com.sam.shallwego.domain.location.entity.Location;
 import com.sam.shallwego.domain.savelocation.dto.LocationDto;
+import com.sam.shallwego.domain.savelocation.ro.SaveLocationRO;
 import com.sam.shallwego.domain.savelocation.service.LocationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
@@ -35,5 +37,13 @@ public class LocationController {
                 .map(authentication -> authentication.getCredentials().toString())
                 .publishOn(Schedulers.boundedElastic())
                 .flatMap(token -> locationService.deleteLocation(token, address));
+    }
+
+    @GetMapping
+    public Flux<SaveLocationRO> findAllLocation(Mono<Authentication> authenticationMono) {
+        return authenticationMono
+                .map(authentication -> authentication.getCredentials().toString())
+                .publishOn(Schedulers.boundedElastic())
+                .flatMapMany(locationService::findLocationsByMember);
     }
 }
