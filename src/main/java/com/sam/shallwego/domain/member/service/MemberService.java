@@ -29,8 +29,7 @@ public class MemberService {
         return Mono.fromCallable(() -> memberRepository
                         .save(signDto.toEntity(passwordEncoder)))
                 .map(SignRO::new)
-                .subscribeOn(Schedulers.boundedElastic())
-                .log();
+                .subscribeOn(Schedulers.boundedElastic());
     }
 
     public Mono<LoginRO> loginMember(final SignDto signDto) {
@@ -43,8 +42,7 @@ public class MemberService {
                     jwtUtil.generateAccessToken(member.getUsername()),
                     jwtUtil.generateRefreshToken(member.getUsername())
             ));
-        }).subscribeOn(Schedulers.boundedElastic())
-        .log();
+        }).subscribeOn(Schedulers.boundedElastic());
     }
 
     public Mono<ReissueRO> reissueToken(final ReissueDto reissueDto) {
@@ -53,7 +51,7 @@ public class MemberService {
                 .subscribeOn(Schedulers.boundedElastic())
                 .flatMap(member -> Mono
                         .just(new ReissueRO(jwtUtil.generateAccessToken(member.getUsername())))
-                ).log();
+                );
     }
 
     public Mono<Member> memberMonoByUsername(String username) {
