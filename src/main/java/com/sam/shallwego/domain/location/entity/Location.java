@@ -24,5 +24,4 @@ public class Location {
             super(HttpStatus.NOT_FOUND, "존재하지 않은 장소입니다.");
         }
     }
-
 }

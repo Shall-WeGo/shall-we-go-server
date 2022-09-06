@@ -23,11 +23,10 @@ public class SaveLocation {
 
     @ManyToOne
     private Location location;
-
+    
     public static class NotSavedException extends BusinessException {
         public NotSavedException() {
             super(HttpStatus.CONFLICT, "저장되지 않은 장소입니다.");
         }
     }
-
 }
