@@ -73,6 +73,7 @@ public class SecurityConfig {
                     exchange.pathMatchers(HttpMethod.OPTIONS).permitAll()
                             .pathMatchers("/actuator/**").permitAll()
                             .pathMatchers(HttpMethod.POST,"/users/**").permitAll()
+                            .pathMatchers(HttpMethod.GET, "/reviews").permitAll()
                             .anyExchange().authenticated();
                 }).addFilterAt(new JwtFilter(jwtUtil), SecurityWebFiltersOrder.HTTP_BASIC)
                 .build();

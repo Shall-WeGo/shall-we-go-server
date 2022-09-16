@@ -2,6 +2,7 @@ package com.sam.shallwego.domain.review.service;
 
 import com.sam.shallwego.domain.embedded.ReviewId;
 import com.sam.shallwego.domain.location.repository.LocationRepository;
+import com.sam.shallwego.domain.member.entity.Member;
 import com.sam.shallwego.domain.member.service.MemberService;
 import com.sam.shallwego.domain.review.dto.ReviewDto;
 import com.sam.shallwego.domain.review.entity.Review;
@@ -12,8 +13,11 @@ import com.sam.shallwego.global.jwt.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
+
+import java.util.concurrent.atomic.AtomicReference;
 
 @Service
 @Transactional
@@ -28,6 +32,7 @@ public class ReviewService {
 
     public Mono<ReviewRO> writeReview(final String token,
                                       final ReviewDto reviewDto) {
+        AtomicReference<Member> writer = new AtomicReference<>();
         String username = jwtUtil.extractUsernameFromToken(token, "access");
         return locationService.findLocationOrElseByAddress(reviewDto.getLocation())
                 .flatMap(location -> {
@@ -41,6 +46,7 @@ public class ReviewService {
                 .publishOn(Schedulers.boundedElastic())
                 .doOnNext(location -> memberService.memberMonoByUsername(username)
                         .doOnNext(member -> {
+                            writer.set(member);
                             ReviewId reviewId = new ReviewId(member, location);
                             Review review = Review.builder()
                                     .reviewId(reviewId)
@@ -53,7 +59,19 @@ public class ReviewService {
                         }).publishOn(Schedulers.boundedElastic())
                         .subscribe())
                 .subscribeOn(Schedulers.boundedElastic())
-                .thenReturn(new ReviewRO(reviewDto));
+                .thenReturn(new ReviewRO(writer.get(), reviewDto));
     }
 
+    @Transactional(readOnly = true)
+    public Flux<ReviewRO> findAllReview(final String address) {
+        return locationService.findLocationByAddress(address)
+                .flatMap(location -> Mono.fromCallable(() -> reviewRepository
+                        .findAllByReviewIdLocation(location))
+                        .subscribeOn(Schedulers.boundedElastic()))
+                .flatMapMany(Flux::fromIterable)
+                .parallel()
+                .runOn(Schedulers.parallel())
+                .map(ReviewRO::new)
+                .sequential();
+    }
 }
