@@ -2,7 +2,6 @@ package com.sam.shallwego.domain.review.service;
 
 import com.sam.shallwego.domain.embedded.ReviewId;
 import com.sam.shallwego.domain.location.repository.LocationRepository;
-import com.sam.shallwego.domain.member.entity.Member;
 import com.sam.shallwego.domain.member.service.MemberService;
 import com.sam.shallwego.domain.review.dto.ReviewDto;
 import com.sam.shallwego.domain.review.entity.Review;
@@ -18,8 +17,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
-import java.util.concurrent.atomic.AtomicReference;
-
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -33,34 +30,30 @@ public class ReviewService {
 
     public Mono<ReviewRO> writeReview(final String token,
                                       final ReviewDto reviewDto) {
-        AtomicReference<Member> writer = new AtomicReference<>();
         String username = jwtUtil.extractUsernameFromToken(token, "access");
         return locationService.findLocationOrElseByAddress(reviewDto.getLocation())
                 .flatMap(location -> {
                         if (location.getId() == null) {
-                            return Mono.fromCallable(() -> locationRepository.save(location))
-                                    .subscribeOn(Schedulers.boundedElastic());
+                            return Mono.fromSupplier(() -> locationRepository.save(location))
+                                    .publishOn(Schedulers.boundedElastic());
                         }
 
-                        return Mono.just(location);
+                        return Mono.defer(() -> Mono.just(location));
                 })
                 .publishOn(Schedulers.boundedElastic())
-                .doOnNext(location -> memberService.memberMonoByUsername(username)
-                        .doOnNext(member -> {
-                            writer.set(member);
-                            ReviewId reviewId = new ReviewId(member, location);
-                            Review review = Review.builder()
-                                    .reviewId(reviewId)
-                                    .content(reviewDto.getReviewMessage())
-                                    .rate(reviewDto.getRate())
-                                    .build();
-                            Mono.fromCallable(() -> reviewRepository.save(review))
-                                    .subscribeOn(Schedulers.boundedElastic())
-                                    .subscribe();
-                        }).publishOn(Schedulers.boundedElastic())
-                        .subscribe())
-                .subscribeOn(Schedulers.boundedElastic())
-                .thenReturn(new ReviewRO(writer.get(), reviewDto));
+                .flatMap(location -> memberService.memberMonoByUsername(username)
+                                .subscribeOn(Schedulers.boundedElastic())
+                                .flatMap(member -> {
+                                    ReviewId reviewId = new ReviewId(member, location);
+                                    Review review = Review.builder()
+                                            .reviewId(reviewId)
+                                            .content(reviewDto.getReviewMessage())
+                                            .rate(reviewDto.getRate())
+                                            .build();
+                                    return Mono.fromSupplier(() -> reviewRepository.save(review))
+                                            .subscribeOn(Schedulers.boundedElastic())
+                                            .then(Mono.just(new ReviewRO(member, reviewDto)));
+                                }).subscribeOn(Schedulers.boundedElastic()));
     }
 
     @Transactional(readOnly = true)
@@ -79,14 +72,14 @@ public class ReviewService {
     public Mono<Void> deleteReview(final String token, final String address) {
         String username = jwtUtil.extractUsernameFromToken(token, "access");
         return memberService.memberMonoByUsername(username)
-                .publishOn(Schedulers.boundedElastic())
+                .subscribeOn(Schedulers.boundedElastic())
                 .doOnSuccess(member -> locationService.findLocationByAddress(address)
-                        .publishOn(Schedulers.boundedElastic())
+                        .subscribeOn(Schedulers.boundedElastic())
                         .doOnSuccess(location -> {
                             ReviewId reviewId = new ReviewId(member, location);
                             reviewRepository.deleteById(reviewId);
                         }).subscribe()).subscribeOn(Schedulers.boundedElastic())
-                .then();
+                .then().log("리뷰 삭제 끝");
     }
 
     @Transactional(readOnly = true)
