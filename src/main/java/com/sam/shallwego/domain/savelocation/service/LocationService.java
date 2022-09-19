@@ -10,14 +10,17 @@ import com.sam.shallwego.domain.savelocation.ro.SaveLocationRO;
 import com.sam.shallwego.global.exception.BusinessException;
 import com.sam.shallwego.global.jwt.JwtUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -34,7 +37,7 @@ public class LocationService {
         return findLocationOrElseByAddress(locationDto.getLocation())
                 .flatMap(location -> {
                     if (location.getId() == null) {
-                        return Mono.fromCallable(() -> locationRepository.save(location))
+                        return Mono.fromSupplier(() -> locationRepository.save(location))
                                 .subscribeOn(Schedulers.boundedElastic());
                     }
 
@@ -42,7 +45,7 @@ public class LocationService {
                 }).doOnNext(location -> memberService.memberMonoByUsername(username)
                         .doOnNext(member -> {
                             SaveLocation saveLocation = new SaveLocation(null, member, location);
-                            Mono.fromCallable(() -> saveLocationRepository.save(saveLocation))
+                            Mono.fromSupplier(() -> saveLocationRepository.save(saveLocation))
                                     .subscribeOn(Schedulers.boundedElastic())
                                     .subscribe();
                         }).publishOn(Schedulers.boundedElastic())
@@ -52,6 +55,7 @@ public class LocationService {
 
     public Mono<Object> deleteLocation(final String token,
                                      final String address) {
+        log.warn("서비스 시작");
         String username = jwtUtil.extractUsernameFromToken(token, "access");
         return findLocationByAddress(address)
                 .flatMap(location -> memberService.memberMonoByUsername(username)
@@ -63,7 +67,8 @@ public class LocationService {
                                 .subscribeOn(Schedulers.boundedElastic())
                                 .subscribe())).publishOn(Schedulers.boundedElastic())
                 .onErrorResume(Mono::error).publishOn(Schedulers.boundedElastic())
-                .flatMap(saveLocation -> Mono.empty());
+                .flatMap(saveLocation -> Mono.empty())
+                .log("서비스 끝", Level.WARNING);
     }
 
     @Transactional(readOnly = true)
@@ -85,13 +90,13 @@ public class LocationService {
     public Mono<Location> findLocationOrElseByAddress(String address) {
         return Mono.fromCallable(() -> locationRepository.findByAddress(address)
                 .orElse(new Location(null, address)))
-                .subscribeOn(Schedulers.boundedElastic());
+                .publishOn(Schedulers.boundedElastic());
     }
 
     @Transactional(readOnly = true)
     public Mono<Location> findLocationByAddress(String address) {
         return Mono.fromCallable(() -> locationRepository.findByAddress(address)
                 .orElseThrow(Location.NotExistsException::new))
-                .subscribeOn(Schedulers.boundedElastic());
+                .publishOn(Schedulers.boundedElastic());
     }
 }

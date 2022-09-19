@@ -1,10 +1,10 @@
 package com.sam.shallwego.domain.savelocation.controller;
 
-import com.sam.shallwego.domain.location.entity.Location;
 import com.sam.shallwego.domain.savelocation.dto.LocationDto;
 import com.sam.shallwego.domain.savelocation.ro.SaveLocationRO;
 import com.sam.shallwego.domain.savelocation.service.LocationService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
@@ -12,7 +12,9 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import javax.validation.Valid;
+import java.util.logging.Level;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/locations")
@@ -33,13 +35,15 @@ public class LocationController {
     @DeleteMapping
     public Mono<Object> deleteLocation(Mono<Authentication> authenticationMono,
                                          @RequestParam String address) {
+        log.warn("request");
         return authenticationMono
                 .map(authentication -> authentication.getCredentials().toString())
                 .publishOn(Schedulers.boundedElastic())
-                .flatMap(token -> locationService.deleteLocation(token, address));
+                .flatMap(token -> locationService.deleteLocation(token, address))
+                .log("response", Level.WARNING);
     }
 
-    @GetMapping
+    @GetMapping(produces = "application/stream+json")
     public Flux<SaveLocationRO> findAllLocation(Mono<Authentication> authenticationMono) {
         return authenticationMono
                 .map(authentication -> authentication.getCredentials().toString())
