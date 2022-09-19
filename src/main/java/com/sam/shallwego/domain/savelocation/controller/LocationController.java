@@ -12,7 +12,6 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import javax.validation.Valid;
-import java.util.logging.Level;
 
 @Slf4j
 @RestController
@@ -35,12 +34,10 @@ public class LocationController {
     @DeleteMapping
     public Mono<Object> deleteLocation(Mono<Authentication> authenticationMono,
                                          @RequestParam String address) {
-        log.warn("request");
         return authenticationMono
                 .map(authentication -> authentication.getCredentials().toString())
                 .publishOn(Schedulers.boundedElastic())
-                .flatMap(token -> locationService.deleteLocation(token, address))
-                .log("response", Level.WARNING);
+                .flatMap(token -> locationService.deleteLocation(token, address));
     }
 
     @GetMapping(produces = "application/stream+json")
