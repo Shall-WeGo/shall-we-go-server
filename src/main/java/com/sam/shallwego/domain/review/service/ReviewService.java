@@ -6,6 +6,7 @@ import com.sam.shallwego.domain.member.entity.Member;
 import com.sam.shallwego.domain.member.service.MemberService;
 import com.sam.shallwego.domain.review.dto.ReviewDto;
 import com.sam.shallwego.domain.review.entity.Review;
+import com.sam.shallwego.domain.review.repository.HighRateReview;
 import com.sam.shallwego.domain.review.repository.ReviewRepository;
 import com.sam.shallwego.domain.review.ro.ReviewRO;
 import com.sam.shallwego.domain.savelocation.service.LocationService;
@@ -74,4 +75,27 @@ public class ReviewService {
                 .map(ReviewRO::new)
                 .sequential();
     }
+
+    public Mono<Void> deleteReview(final String token, final String address) {
+        String username = jwtUtil.extractUsernameFromToken(token, "access");
+        return memberService.memberMonoByUsername(username)
+                .publishOn(Schedulers.boundedElastic())
+                .doOnSuccess(member -> locationService.findLocationByAddress(address)
+                        .publishOn(Schedulers.boundedElastic())
+                        .doOnSuccess(location -> {
+                            ReviewId reviewId = new ReviewId(member, location);
+                            reviewRepository.deleteById(reviewId);
+                        }).subscribe()).subscribeOn(Schedulers.boundedElastic())
+                .then();
+    }
+
+    @Transactional(readOnly = true)
+    public Flux<HighRateReview> findAllByHighRate() {
+        return Mono.fromCallable(reviewRepository::findAllByAvgRate)
+                .subscribeOn(Schedulers.boundedElastic())
+                .flatMapMany(Flux::fromIterable)
+                .parallel()
+                .runOn(Schedulers.parallel()).sequential();
+    }
+
 }

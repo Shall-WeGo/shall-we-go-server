@@ -1,6 +1,7 @@
 package com.sam.shallwego.domain.review.controller;
 
 import com.sam.shallwego.domain.review.dto.ReviewDto;
+import com.sam.shallwego.domain.review.repository.HighRateReview;
 import com.sam.shallwego.domain.review.ro.ReviewRO;
 import com.sam.shallwego.domain.review.service.ReviewService;
 import lombok.RequiredArgsConstructor;
@@ -28,8 +29,22 @@ public class ReviewController {
                 .flatMap(token -> reviewService.writeReview(token, reviewDto));
     }
 
-    @GetMapping(produces = "application/stream+json")
-    public Flux<ReviewRO> findReviewByAddress(@RequestParam("address") String address) {
+    @GetMapping(value = "{address}", produces = "application/stream+json")
+    public Flux<ReviewRO> findReviewByAddress(@PathVariable("address") String address) {
         return reviewService.findAllReview(address);
+    }
+
+    @DeleteMapping
+    public Mono<Void> deleteReview(Mono<Authentication> authentication,
+                                   @RequestParam("address") String address) {
+        return authentication
+                .map(auth -> auth.getCredentials().toString())
+                .publishOn(Schedulers.boundedElastic())
+                .flatMap(token -> reviewService.deleteReview(token, address));
+    }
+
+    @GetMapping(produces = "application/stream+json")
+    public Flux<HighRateReview> findAllHighReview() {
+        return reviewService.findAllByHighRate();
     }
 }

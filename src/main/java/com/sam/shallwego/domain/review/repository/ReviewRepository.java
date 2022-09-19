@@ -14,8 +14,8 @@ public interface ReviewRepository extends CrudRepository<Review, ReviewId> {
 
     List<Review> findAllByReviewIdLocation(Location reviewIdLocation);
 
-    @Query("select new java.lang.Double(avg(r.rate)) " +
+    @Query("select new com.sam.shallwego.domain.review.repository.HighRateReview(r.reviewId.location.address, avg(r.rate)) " +
             "from Review r group by r.reviewId.location having avg(r.rate) >= 4.0")
-    Double findAllByAvgRate();
+    List<HighRateReview> findAllByAvgRate();
 
 }
