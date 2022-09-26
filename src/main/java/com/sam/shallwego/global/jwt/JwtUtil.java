@@ -67,7 +67,7 @@ public class JwtUtil {
                 .setSubject(username)
                 .claim("type", type)
                 .setIssuedAt(tokenCreateDate)
-                .setExpiration(new Date(tokenCreateDate.getTime() + expWithMs))
+                .setExpiration(new Date(tokenCreateDate.getTime() + (expWithMs * 1000)))
                 .compact();
     }
 

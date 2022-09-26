@@ -18,6 +18,5 @@ public class Review {
     @Column(columnDefinition = "TEXT NOT NULL")
     private String content;
 
-    private short rate;
-
+    private Short rate;
 }
