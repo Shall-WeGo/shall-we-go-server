@@ -29,5 +29,4 @@ public class SaveLocation {
             super(HttpStatus.CONFLICT, "저장되지 않은 장소입니다.");
         }
     }
-
 }

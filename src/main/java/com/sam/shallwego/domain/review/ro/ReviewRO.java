@@ -1,6 +1,7 @@
 package com.sam.shallwego.domain.review.ro;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import com.sam.shallwego.domain.member.entity.Member;
 import com.sam.shallwego.domain.review.dto.ReviewDto;
 import com.sam.shallwego.domain.review.entity.Review;

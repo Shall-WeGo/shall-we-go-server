@@ -9,7 +9,7 @@ import com.sam.shallwego.domain.member.ro.ReissueRO;
 import com.sam.shallwego.domain.member.ro.SignRO;
 import com.sam.shallwego.global.jwt.JwtUtil;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,7 +19,6 @@ import reactor.core.scheduler.Schedulers;
 
 import java.util.concurrent.Executors;
 
-@Slf4j
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor

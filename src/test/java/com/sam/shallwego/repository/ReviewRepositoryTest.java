@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+
 import org.springframework.util.StopWatch;
 
 import java.util.List;
@@ -90,7 +91,7 @@ public class ReviewRepositoryTest {
         assertThat(highRateReviewList).isNotNull();
         assertThat(highRateReviewList).isNotEmpty();
         assertThat(highRateReviewList).hasSize(1);
-
+        
         System.out.println(stopWatch.getTotalTimeMillis() + "ms");
     }
 }

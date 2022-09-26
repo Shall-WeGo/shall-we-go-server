@@ -16,5 +16,4 @@ public interface SaveLocationRepository
     Optional<SaveLocation> findByMemberAndLocation(Member member, Location location);
 
     List<SaveLocation> findAllByMember(Member member);
-
 }

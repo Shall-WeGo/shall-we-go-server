@@ -74,5 +74,4 @@ public class Member implements UserDetails {
             super(HttpStatus.CONFLICT, "이미 존재하는 회원입니다.");
         }
     }
-
 }
