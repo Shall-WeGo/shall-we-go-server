@@ -75,14 +75,8 @@ public class SecurityConfig {
                             .pathMatchers(HttpMethod.POST,"/users/**").permitAll()
                             .pathMatchers(HttpMethod.GET, "/reviews/**").permitAll()
                             .pathMatchers("/v3/api-docs/**").permitAll()
-//                            .pathMatchers("/configuration/ui").permitAll()
-//                            .pathMatchers("/swagger-resources").permitAll()
-//                            .pathMatchers("/configuration/security").permitAll()
                             .pathMatchers("/swagger-ui.html/**").permitAll()
-//                            .pathMatchers("/swagger-ui/**").permitAll()
-//                            .pathMatchers("/configuration/ui").permitAll()
                             .pathMatchers("/webjars/**").permitAll()
-//                            .pathMatchers("/swagger/**").permitAll()
                             .anyExchange().authenticated();
                 }).addFilterAt(new JwtFilter(jwtUtil), SecurityWebFiltersOrder.HTTP_BASIC)
                 .build();
