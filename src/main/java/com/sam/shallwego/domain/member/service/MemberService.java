@@ -37,9 +37,16 @@ public class MemberService {
     @Transactional
     public Mono<SignRO> registerMember(final SignDto signDto) {
         //noinspection BlockingMethodInNonBlockingContext
-        return Mono.fromSupplier(() -> memberRepository.save(signDto.toEntity(passwordEncoder)))
-                .publishOn(memberSaveScheduler)
-                .flatMap(member -> Mono.defer(() -> Mono.just(new SignRO(member))));
+        return Mono.fromCallable(() -> memberRepository.existsByUsername(signDto.getUsername()))
+                .subscribeOn(Schedulers.boundedElastic())
+                .flatMap(exists -> {
+                    if (exists) {
+                        return Mono.error(Member.AlreadyExistsException::new);
+                    }
+                    return Mono.empty();
+                }).then(Mono.fromSupplier(() -> memberRepository.save(signDto.toEntity(passwordEncoder)))
+                        .publishOn(memberSaveScheduler)
+                        .flatMap(member -> Mono.defer(() -> Mono.just(new SignRO(member)))));
     }
 
     public Mono<LoginRO> loginMember(final SignDto signDto) {

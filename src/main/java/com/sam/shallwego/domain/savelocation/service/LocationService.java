@@ -10,17 +10,14 @@ import com.sam.shallwego.domain.savelocation.ro.SaveLocationRO;
 import com.sam.shallwego.global.exception.BusinessException;
 import com.sam.shallwego.global.jwt.JwtUtil;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
-import java.util.logging.Level;
 import java.util.stream.Collectors;
 
-@Slf4j
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -55,7 +52,6 @@ public class LocationService {
 
     public Mono<Object> deleteLocation(final String token,
                                      final String address) {
-        log.warn("서비스 시작");
         String username = jwtUtil.extractUsernameFromToken(token, "access");
         return findLocationByAddress(address)
                 .flatMap(location -> memberService.memberMonoByUsername(username)
@@ -67,8 +63,7 @@ public class LocationService {
                                 .subscribeOn(Schedulers.boundedElastic())
                                 .subscribe())).publishOn(Schedulers.boundedElastic())
                 .onErrorResume(Mono::error).publishOn(Schedulers.boundedElastic())
-                .flatMap(saveLocation -> Mono.empty())
-                .log("서비스 끝", Level.WARNING);
+                .flatMap(saveLocation -> Mono.empty());
     }
 
     @Transactional(readOnly = true)

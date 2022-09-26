@@ -69,4 +69,10 @@ public class Member implements UserDetails {
         }
     }
 
+    public static class AlreadyExistsException extends BusinessException {
+        public AlreadyExistsException() {
+            super(HttpStatus.CONFLICT, "이미 존재하는 회원입니다.");
+        }
+    }
+
 }

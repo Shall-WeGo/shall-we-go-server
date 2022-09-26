@@ -79,7 +79,7 @@ public class ReviewService {
                             ReviewId reviewId = new ReviewId(member, location);
                             reviewRepository.deleteById(reviewId);
                         }).subscribe()).subscribeOn(Schedulers.boundedElastic())
-                .then().log("리뷰 삭제 끝");
+                .then();
     }
 
     @Transactional(readOnly = true)
