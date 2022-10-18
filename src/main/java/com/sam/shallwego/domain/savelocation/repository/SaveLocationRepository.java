@@ -7,13 +7,14 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Optional;
 
 @Repository
 public interface SaveLocationRepository
         extends JpaRepository<SaveLocation, Long> {
 
-    Optional<SaveLocation> findByMemberAndLocation(Member member, Location location);
+    boolean existsByMemberAndLocation(Member member, Location location);
 
     List<SaveLocation> findAllByMember(Member member);
+
+    boolean existsByMemberAndId(Member member, Long id);
 }

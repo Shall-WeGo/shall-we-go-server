@@ -29,4 +29,10 @@ public class SaveLocation {
             super(HttpStatus.CONFLICT, "저장되지 않은 장소입니다.");
         }
     }
+
+    public static class AlreadySavedException extends BusinessException {
+        public AlreadySavedException() {
+            super(HttpStatus.CONFLICT, "이미 저장된 장소입니다.");
+        }
+    }
 }

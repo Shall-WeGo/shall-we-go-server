@@ -46,21 +46,20 @@ public class LocationController {
                             content = @Content(schema = @Schema(oneOf = ExceptionSchema.class)))
             }
     )
-    public Mono<Void> saveLocation(Mono<Authentication> authenticationMono,
+    public Mono<SaveLocationRO> saveLocation(Mono<Authentication> authenticationMono,
                                    @RequestBody @Valid LocationDto locationDto) {
         return authenticationMono
                 .map(authentication -> authentication.getCredentials().toString())
                 .publishOn(Schedulers.boundedElastic())
-                .doOnNext(token -> locationService.saveLocation(token, locationDto).subscribe())
-                .then();
+                .flatMap(token -> locationService.saveLocation(token, locationDto));
     }
 
     @DeleteMapping
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(description = "저장된 장소 취소",
             parameters = {
-                    @Parameter(in = ParameterIn.QUERY, name = "address", required = true,
-                            schema = @Schema(type = "string")),
+                    @Parameter(in = ParameterIn.QUERY, name = "address-id", required = true,
+                            schema = @Schema(type = "$int64")),
                     @Parameter(in = ParameterIn.HEADER, description = "Bearer {ACCESS-TOKEN}",
                             name = "Authorization", schema = @Schema(type = "string"))
             }
@@ -75,11 +74,11 @@ public class LocationController {
             }
     )
     public Mono<Object> deleteLocation(Mono<Authentication> authenticationMono,
-                                         @RequestParam String address) {
+                                         @RequestParam(value = "address-id", required = false) long addressId) {
         return authenticationMono
                 .map(authentication -> authentication.getCredentials().toString())
                 .publishOn(Schedulers.boundedElastic())
-                .flatMap(token -> locationService.deleteLocation(token, address));
+                .flatMap(token -> locationService.deleteLocation(token, addressId));
     }
 
     @GetMapping(produces = "application/stream+json")
