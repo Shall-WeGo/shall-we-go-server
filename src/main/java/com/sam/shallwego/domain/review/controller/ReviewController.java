@@ -2,8 +2,10 @@ package com.sam.shallwego.domain.review.controller;
 
 import com.sam.shallwego.domain.review.dto.ReviewDto;
 import com.sam.shallwego.domain.review.repository.HighRateReview;
+import com.sam.shallwego.domain.review.ro.ReviewListRO;
 import com.sam.shallwego.domain.review.ro.ReviewRO;
 import com.sam.shallwego.domain.review.service.ReviewService;
+import com.sam.shallwego.domain.savelocation.dto.LocationDto;
 import com.sam.shallwego.global.content.ExceptionSchema;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -22,6 +24,7 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import javax.validation.Valid;
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -104,5 +107,21 @@ public class ReviewController {
     )
     public Flux<HighRateReview> findAllHighReview() {
         return reviewService.findAllByHighRate();
+    }
+
+    @PostMapping("/recommendation")
+    @ResponseStatus(HttpStatus.CREATED)
+    @Operation(
+            description = "추천 장소 저장 및 리뷰 조회",
+            parameters = @Parameter(in = ParameterIn.HEADER, description = "Bearer {ACCESS-TOKEN}",
+                    name = "Authorization", schema = @Schema(type = "string"))
+    )
+    @ApiResponses(
+            value = {
+                    @ApiResponse(responseCode = "201", description = "추천 장소를 저장하고 해당 리뷰를 조회하였습니다.")
+            }
+    )
+    public Flux<ReviewListRO> findRecommendationLocations(@RequestBody @Valid List<LocationDto> locations) {
+        return reviewService.findRecommendationLocations(locations);
     }
 }

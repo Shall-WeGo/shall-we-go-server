@@ -74,6 +74,7 @@ public class SecurityConfig {
                             .pathMatchers("/actuator/**").permitAll()
                             .pathMatchers(HttpMethod.POST,"/users/**").permitAll()
                             .pathMatchers(HttpMethod.GET, "/reviews/**").permitAll()
+                            .pathMatchers(HttpMethod.POST, "/reviews/recommendation").permitAll()
                             .pathMatchers("/v3/api-docs/**").permitAll()
                             .pathMatchers("/swagger-ui.html/**").permitAll()
                             .pathMatchers("/webjars/**").permitAll()

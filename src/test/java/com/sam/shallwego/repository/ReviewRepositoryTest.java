@@ -38,7 +38,7 @@ public class ReviewRepositoryTest {
     }
 
     private Location location() {
-        return locationRepository.save(new Location(null, "대소고"));
+        return locationRepository.save(new Location(null, "구지면 창리로 11길", "대소고", 0.0, 0.0));
     }
 
     @DisplayName("장소로 모든 리뷰 조회 테스트")

@@ -4,6 +4,7 @@ import com.sam.shallwego.domain.location.entity.Location;
 import com.sam.shallwego.domain.location.repository.LocationRepository;
 import com.sam.shallwego.domain.member.entity.Member;
 import com.sam.shallwego.domain.member.service.MemberService;
+import com.sam.shallwego.domain.review.ro.ReviewRO;
 import com.sam.shallwego.domain.savelocation.dto.LocationDto;
 import com.sam.shallwego.domain.savelocation.entity.SaveLocation;
 import com.sam.shallwego.domain.savelocation.repository.SaveLocationRepository;
@@ -16,6 +17,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,7 +33,7 @@ public class LocationService {
     public Mono<SaveLocationRO> saveLocation(final String token,
                                    final LocationDto locationDto) {
         String username = jwtUtil.extractUsernameFromToken(token, "access");
-        return findLocationOrElseByAddress(locationDto.getLocation())
+        return findLocationOrElseByAddress(locationDto.getLocation(), locationDto.getPlace(), String.valueOf(locationDto.getCoordinateX()), String.valueOf(locationDto.getCoordinateY()))
                 .flatMap(location -> {
                     if (location.getId() == null) {
                         return Mono.fromSupplier(() -> locationRepository.save(location))
@@ -84,9 +86,9 @@ public class LocationService {
     }
 
     @Transactional(readOnly = true)
-    public Mono<Location> findLocationOrElseByAddress(String address) {
-        return Mono.fromCallable(() -> locationRepository.findByAddress(address)
-                .orElse(new Location(null, address)))
+    public Mono<Location> findLocationOrElseByAddress(String... info) {
+        return Mono.fromCallable(() -> locationRepository.findByAddress(info[0])
+                .orElse(new Location(null, info[0], info[1], Double.parseDouble(info[2]), Double.parseDouble(info[3]))))
                 .publishOn(Schedulers.boundedElastic());
     }
 

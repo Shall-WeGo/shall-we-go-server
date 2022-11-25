@@ -9,15 +9,24 @@ import javax.persistence.*;
 @Getter
 @Entity
 @Builder
-@Table(name = "location")
+@Table(name = "location", indexes = @Index(name = "location_uq_ix_address", columnList = "address"))
 @AllArgsConstructor @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Location {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(length = 100, nullable = false, unique = true)
-    private String address;
+    @Column(nullable = false)
+    private String address;     // 주소
+
+    @Column(length = 100, nullable = false)
+    private String place;       // 장소명
+
+    @Column(nullable = false)
+    private double coordinateX;
+
+    @Column(nullable = false)
+    private double coordinateY;
 
     public static class NotExistsException extends BusinessException {
         public NotExistsException() {
