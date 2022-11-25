@@ -1,7 +1,6 @@
 package com.sam.shallwego.domain.review.service;
 
 import com.sam.shallwego.domain.embedded.ReviewId;
-import com.sam.shallwego.domain.location.entity.Location;
 import com.sam.shallwego.domain.location.repository.LocationRepository;
 import com.sam.shallwego.domain.member.service.MemberService;
 import com.sam.shallwego.domain.review.dto.ReviewDto;
@@ -22,7 +21,6 @@ import reactor.core.scheduler.Schedulers;
 
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Service
 @Transactional

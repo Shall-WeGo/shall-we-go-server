@@ -4,8 +4,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.sam.shallwego.domain.savelocation.entity.SaveLocation;
 import lombok.Getter;
 
-import javax.validation.constraints.NotNull;
-
 @Getter
 public class SaveLocationRO {
 

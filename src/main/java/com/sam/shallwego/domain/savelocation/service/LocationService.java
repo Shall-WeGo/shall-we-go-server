@@ -4,7 +4,6 @@ import com.sam.shallwego.domain.location.entity.Location;
 import com.sam.shallwego.domain.location.repository.LocationRepository;
 import com.sam.shallwego.domain.member.entity.Member;
 import com.sam.shallwego.domain.member.service.MemberService;
-import com.sam.shallwego.domain.review.ro.ReviewRO;
 import com.sam.shallwego.domain.savelocation.dto.LocationDto;
 import com.sam.shallwego.domain.savelocation.entity.SaveLocation;
 import com.sam.shallwego.domain.savelocation.repository.SaveLocationRepository;
@@ -17,7 +16,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
-import java.util.List;
 import java.util.stream.Collectors;
 
 @Service

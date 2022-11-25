@@ -1,6 +1,5 @@
 package com.sam.shallwego.domain.savelocation.controller;
 
-import com.sam.shallwego.domain.review.ro.ReviewRO;
 import com.sam.shallwego.domain.savelocation.dto.LocationDto;
 import com.sam.shallwego.domain.savelocation.ro.SaveLocationRO;
 import com.sam.shallwego.domain.savelocation.service.LocationService;
@@ -23,7 +22,6 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import javax.validation.Valid;
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
